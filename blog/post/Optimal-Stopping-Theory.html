@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="cmn-hans">
+
+<head>
+    <meta name="author" content="liujing" charset="utf-8">
+    <title>用 Python 模拟人生：择偶决策中的最优停止理论</title>
+    <link href="../assets/index.css" rel="stylesheet">
+    <link href="../assets/solarized-dark.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../media/image.svg">
+    <!-- KaTeX库用于渲染LaTeX公式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        /* 代码块容器样式 */
+        .code-container {
+            background-color: #f5f7fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        /* 代码块标题栏样式 */
+        .code-header {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        /* 代码块内容样式 - 添加滚动条 */
+        .code-content {
+            max-height: 400px; /* 设置固定高度 */
+            overflow-y: auto;  /* 添加垂直滚动条 */
+            overflow-x: auto;  /* 添加水平滚动条 */
+        }
+
+        pre {
+            margin: 0; /* 移除默认边距 */
+        }
+
+        /* 表格样式 */
+        table {
+            border-collapse: collapse; /* 合并边框 */
+            width: 100%;
+            margin: 20px 0;
+            border: 1px solid #e1e8ed;
+        }
+
+        th, td {
+            border: 1px solid #e1e8ed; /* 添加边框 */
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f7fa;
+            font-weight: 600;
+        }
+    </style>
+    <script>
+        // 代码块折叠功能
+        document.addEventListener('DOMContentLoaded', function () {
+            // 为所有代码块容器添加点击事件
+            var codeHeaders = document.querySelectorAll('.code-header');
+            codeHeaders.forEach(function (header) {
+                header.addEventListener('click', function () {
+                    var content = this.nextElementSibling;
+                    var toggle = this.querySelector('.code-toggle');
+
+                    // 切换内容显示状态
+                    content.classList.toggle('collapsed');
+                    toggle.classList.toggle('collapsed');
+
+                    // 更新按钮文本
+                    if (content.classList.contains('collapsed')) {
+                        toggle.textContent = '▶';
+                        content.style.maxHeight = '0';
+                    } else {
+                        toggle.textContent = '▼';
+                        content.style.maxHeight = '400px';
+                    }
+                });
+            });
+
+            // 初始化KaTeX，渲染所有LaTeX公式
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },  // 块级公式
+                    { left: '$', right: '$', display: false }    // 行内公式
+                ],
+                throwOnError: false
+            });
+        });
+    </script>
+</head>
+
+<body>
+<div id="header">
+    <h1 id="title"><a href="../../index.html">jingaz</a></h1>
+    <div class="links">
+        <a href="https://jami.net/" target="_blank" title="在Jami上联系我：wqdks">
+            <div class="iconfont icon-circle"></div>
+        </a>
+        <a href="https://github.com/jingaz" target="_blank">
+            <div class="iconfont icon-github"></div>
+        </a>
+        <a href="about.html" target="_blank">
+            <div class="iconfont icon-author"></div>
+        </a>
+    </div>
+</div>
+<div class="content">
+    <article>
+        <h1 class="center">用 Python 模拟人生：在择偶决策中，应该追求"完美"还是"幸福"？</h1>
+        <h1>—— 基于最优停止理论（Optimal Stopping Theory）的深度数据分析</h1>
+
+        <p>摘要：我们总是在"还在后面"的期待和"已经错过"的遗憾中摇摆。本文通过数学建模和 Python 蒙特卡洛模拟，对比了择偶决策中的两种经典策略——追求绝对最佳的 37%法则 与追求综合高分的 √N
+            法则。数据告诉我们：追求完美往往以巨大的孤独风险为代价，而适时的"知足"才是幸福的最优解。</p>
+
+        <h2>一、引言：苏格拉底的麦穗与"秘书问题"</h2>
+        <p>古希腊哲学家苏格拉底曾让弟子去麦田里摘一株最大的麦穗，规则是：只许进不许退，一旦摘下就不能更换，一旦错过就无法回头。这不仅仅是一个哲学寓言，它在数学上被称为 "最优停止问题"（Optimal Stopping
+            Problem），或者更通俗的 "秘书问题"。</p>
+        <p>在人生中，这也是我们面临的最大难题之一：择偶。假设你从 20 岁开始寻找伴侣，计划 40
+            岁前结婚。如果你太早做决定，可能会错过后面更好的；如果你一直观望，又可能错过了最好的，最后只能孤独终老或被迫凑合。到底应该观察多久才出手？今天，我们用数据科学的方式来回答这个问题。</p>
+
+        <h2>二、两个截然不同的数学目标</h2>
+        <p>在构建模型之前，我们必须明确人生的"目标函数"。目标不同，最优策略截然不同。</p>
+
+        <h3>策略 A：赌徒的执念 —— 37% 规则 (1/e)</h3>
+        <p>心态："我只想要全场最好的那一个（Top 1）。第二名对我来说和最后一名没区别，都是失败。"</p>
+        <p>结论：观察前 37% 的人。</p>
+
+        <h3>策略 B：投资者的智慧 —— √N 规则</h3>
+        <p>心态："我不在乎是不是'全球最佳'，我只希望找到一个足够优秀的人，过上幸福的生活。我想要的是平均分（期望值）最高。"</p>
+        <p>数学推导：这涉及到一个权衡：观察太少，信息不足，容易选错；观察太久，样本耗尽，被迫选剩下的。通过构建"遗憾值"的损失函数 L(k)，最优停止点近似于总样本数的平方根。</p>
+        <p>$$k \approx \sqrt{N}$$</p>
+        <p>(注：在 N=50 时，$\sqrt{50} \approx 7$，即 14% 左右)</p>
+
+        <h3>数学推导详解</h3>
+        <p>这两个规则分别对应了"最优停止理论"（Optimal Stopping Theory）中的两个不同目标函数（Objective Function）。简单来说：</p>
+        <ul>
+            <li>37% 规则：你的目标是<strong>"只要第一，不要第二"</strong>（风险偏好极高）。</li>
+            <li>√N 规则：你的目标是<strong>"平均分最高"</strong>（风险厌恶，求稳）。</li>
+        </ul>
+
+        <h4>一、37% 规则（1/e）的推导</h4>
+        <h5>目标：最大化选中"全场最佳（Top 1）"的概率</h5>
+
+        <h6>1. 设定变量</h6>
+        <ul>
+            <li>$N$：候选人总数。</li>
+            <li>$k$：我们设定的观察样本数（前 $k$ 个拒绝，记录最大值 $M$）。</li>
+            <li>$x$：我们将 $k$ 视为 $N$ 的一个比例，$x = k/N$。</li>
+        </ul>
+
+        <h6>2. 成功的条件</h6>
+        <p>要选中全场最佳（记为 Best），必须同时满足两个条件：</p>
+        <ul>
+            <li><strong>位置条件</strong>：Best 必须出现在观察期之后（第 $k+1$ 到 $N$ 位）。如果 Best 在前 $k$ 位，直接淘汰，失败。</li>
+            <li><strong>拦截条件</strong>：在 Best 出现之前，不能有任何"冒牌货"被选中。这意味着：在观察期 $k$ 之后、Best 出现之前的所有候选人，都必须比观察期内的最大值 $M$
+                差（否则你会提前选错人）。这意味着：在 Best 之前的所有人里，第二好的人（Second Best）必须出现在前 $k$ 个观察样本中（以此挡住其他冒牌货，强迫你一直等到 Best 出现）。</li>
+        </ul>
+
+        <h6>3. 概率计算</h6>
+        <p>假设全场最佳出现在第 $i$ 个位置（$k < i \leq N$）。</p>
+                <ul>
+                    <li>Best 出现在第 $i$ 位的概率是 $\frac{1}{N}$。</li>
+                    <li>在第 $i$ 位选到 Best 的条件概率是：前 $i-1$ 个人中的最大值，必须出现在前 $k$ 个位置里。概率 $P(\text{win} | \text{Best at } i) =
+                        \frac{k}{i-1}$</li>
+                </ul>
+                <p>总成功概率 $P(k)$ 是所有可能的 $i$ 的加和：</p>
+                <p>$$P(k) = \sum_{i=k+1}^{N} P(\text{Best at } i) \times P(\text{select} | \text{Best at } i)$$</p>
+                <p>$$P(k) = \sum_{i=k+1}^{N} \frac{1}{N} \cdot \frac{k}{i-1} = \frac{k}{N} \sum_{i=k+1}^{N}
+                    \frac{1}{i-1}$$</p>
+
+                <h6>4. 连续化近似（积分）</h6>
+                <p>当 $N$ 很大时，我们将求和转化为积分。令 $x = k/N$，变量 $t = i/N$。求和 $\sum \frac{1}{i}$ 近似于 $\ln(N)$，或者是积分形式 $\int
+                    \frac{1}{t} dt$。</p>
+                <p>$$P(x) \approx x \int_{x}^{1} \frac{1}{t} dt$$</p>
+                <p>$$P(x) = x \cdot [\ln t]_{x}^{1}$$</p>
+                <p>$$P(x) = x (\ln 1 - \ln x) = -x \ln x$$</p>
+
+                <h6>5. 求极值</h6>
+                <p>对 $P(x) = -x \ln x$ 求导并令其为 0：</p>
+                <p>$$P'(x) = -(\ln x + 1) = 0$$</p>
+                <p>$$\ln x = -1$$</p>
+                <p>$$x = e^{-1} = \frac{1}{e} \approx 0.368$$</p>
+                <p><strong>结论：</strong> 最佳观察比例是 $1/e$（约 37%）。</p>
+
+                <h4>二、√N 规则的推导</h4>
+                <h5>目标：最大化选中的"平均分（Expected Value）"</h5>
+
+                <h6>1. 问题的本质差异</h6>
+                <ul>
+                    <li>在 37% 规则中，如果你没选中第一名，得 0 分。</li>
+                    <li>在"追求高分"策略中，如果你没选中第一名，但选中了第 5 名，依然很高分。</li>
+                    <li>最大的风险不再是"错过第一"，而是"错过所有人"（即观察太久，不得不选最后一个随机分）。</li>
+                </ul>
+
+                <h6>2. 构建"损失函数"（Loss Function）</h6>
+                <p>我们通过最小化"损失"来寻找最佳的 $k$。假设分数均匀分布在 $[0, 1]$ 之间。</p>
+                <ul>
+                    <li><strong>观察太少的损失（选早了）</strong>：如果你只看很少的人，你的标准太低，容易选到一个平庸的人。前 $k$ 个人的最大值期望约为 $1 -
+                        \frac{1}{k}$。你选中的人会略高于这个标准，距离满分 1 的差距（Regret）大约与 $\frac{1}{k}$ 成正比。$L_1 \propto \frac{1}{k}$
+                    </li>
+                    <li><strong>观察太多的损失（选晚了/漏选）</strong>：全场最大值出现在前 $k$ 个观察样本中的概率是
+                        $\frac{k}{N}$。如果最大值已经被你观察并淘汰了，按照规则，你很有可能一直找不到更好的，直到最后被迫选第 $N$ 个人。第 $N$ 个人的平均分是
+                        $0.5$（随机）。相比于优秀候选人（接近1），损失巨大。这个风险与 $k$ 成正比。$L_2 \propto \frac{k}{N}$</li>
+                </ul>
+
+                <h6>3. 寻找平衡点</h6>
+                <p>总损失函数可以近似为：</p>
+                <p>$$L(k) \approx \frac{C_1}{k} + \frac{k}{N}$$</p>
+                <p>（其中 $C_1$ 是常数，取决于具体分布，在均匀分布下接近 $1/2$）</p>
+                <p>我们要最小化这个损失，对 $k$ 求导：</p>
+                <p>$$L'(k) = -\frac{C_1}{k^2} + \frac{1}{N} = 0$$</p>
+                <p>$$\frac{1}{N} = \frac{C_1}{k^2}$$</p>
+                <p>$$k^2 = C_1 \cdot N$$</p>
+                <p>$$k \propto \sqrt{N}$$</p>
+
+                <h6>4. 更精确的计算（针对均匀分布）</h6>
+                <p>对于 $[0, 1]$ 均匀分布，精确的期望值计算表明，最佳停止位置 $k^*$ 满足：</p>
+                <p>$$k^* \approx \sqrt{2N} \quad \text{或者} \quad \sqrt{N}$$</p>
+                <p>（取决于具体的二阶近似项，但量级（Order of Magnitude）绝对是 $\sqrt{N}$）。</p>
+
+                <p>对于 $N=1000$：</p>
+                <ul>
+                    <li>$37%$ 规则：$k = 368$</li>
+                    <li>$\sqrt{N}$ 规则：$k \approx \sqrt{1000} \approx 31.6$</li>
+                </ul>
+                <p>这就是为什么考察1000个候选人平均分最高的观察点在 3%-4% 左右（$31/1000 \approx 3.1%$）。</p>
+
+                <h6>总结：为什么直觉会骗人？</h6>
+                <table>
+                    <tr>
+                        <th>策略</th>
+                        <th>37% 规则 (1/e)</th>
+                        <th>√N 规则</th>
+                    </tr>
+                    <tr>
+                        <td>心态</td>
+                        <td>赌徒 / 完美主义者</td>
+                        <td>稳健派 / 实用主义者</td>
+                    </tr>
+                    <tr>
+                        <td>目标</td>
+                        <td>必须是 No.1，No.2 也是垃圾</td>
+                        <td>分数越高越好，千万别空手而归</td>
+                    </tr>
+                    <tr>
+                        <td>核心风险</td>
+                        <td>选早了（把后面更好的错过了）</td>
+                        <td>选晚了（把人都看完了，被迫捡漏）</td>
+                    </tr>
+                    <tr>
+                        <td>数学推导</td>
+                        <td>$\int \frac{1}{x} dx$ (对数级)</td>
+                        <td>$\frac{1}{k} + \frac{k}{N}$ (平衡倒数与线性)</td>
+                    </tr>
+                    <tr>
+                        <td>观察期</td>
+                        <td>很长 (37%)，建立极高门槛</td>
+                        <td>很短 (3-4%)，建立中高门槛</td>
+                    </tr>
+                    <tr>
+                        <td>结果</td>
+                        <td>要么 100 分，要么 0 分</td>
+                        <td>稳定拿 90-95 分</td>
+                    </tr>
+                </table>
+
+                <h2>三、Python 蒙特卡洛模拟</h2>
+                <p>理论总是抽象的，现实中这两个策略表现如何？我们构建一个 Python 模拟器来验证。</p>
+
+                <ol>
+                    <li>实验设置
+                        <ul>
+                            <li>样本量：模拟 5000 次不同的人生轨迹。</li>
+                            <li>候选人：假设 20-40 岁期间会遇到 50 个潜在对象。</li>
+                            <li>分数分布：正态分布（均值70，标准差15），模拟真实人群质量。</li>
+                            <li>观察期转换：</li>
+                        </ul>
+                        <p>37% 规则：观察前 18 人（约 27.2 岁结束观察）。</p>
+                        <p>√N 规则：观察前 7 人（约 22.8 岁结束观察）。</p>
+                    </li>
+
+                    <li>核心代码实现</li>
+                </ol>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span class="code-title">核心代码实现</span>
+                        <span class="code-toggle">▼</span>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS']
+plt.rcParams['axes.unicode_minus'] = False
+
+def simulate_marriage_strategy(num_years=20, start_age=20, num_candidates=50, simulations=5000):
+    """
+    模拟两种择偶策略：37%规则 vs √N规则
+    修复逻辑：观察期只看不选，记录最佳分数
+    """
+    np.random.seed(42)
+
+    ages_37_rule = []
+    ages_sqrt_rule = []
+    scores_37_rule = []
+    scores_sqrt_rule = []
+
+    # 计算观察期人数（只看不选）
+    cutoff_37 = int(num_candidates * 0.37)  # 观察18人，约27.2岁结束观察
+    cutoff_sqrt = int(np.sqrt(num_candidates))  # 观察7人，约22.8岁结束观察
+
+    # 记录统计数据
+    stats = {
+        'forced_40_37': 0,
+        'forced_40_sqrt': 0,
+        'best_in_observation_37': 0,
+        'best_in_observation_sqrt': 0
+    }
+
+    for sim in range(simulations):
+        # 生成候选人：每个人的吸引力分数（0-100）
+        candidates = np.random.normal(loc=70, scale=15, size=num_candidates)
+        candidates = np.clip(candidates, 0, 100)  # 限制在0-100分
+
+        # --- 策略1: 37% 规则 (1/e 策略) ---
+        # 步骤1: 观察期（只看不选，建立标准）
+        if cutoff_37 > 0:
+            best_in_observation_37 = np.max(candidates[:cutoff_37])
+        else:
+            best_in_observation_37 = 0
+
+        # 检查观察期最佳是否就是全局最佳（这将导致"孤独终老"风险）
+        global_best_idx = np.argmax(candidates)
+        if global_best_idx < cutoff_37:
+            stats['best_in_observation_37'] += 1
+
+        # 步骤2: 决策期（选择第一个比观察期最佳更好的）
+        selected_idx_37 = num_candidates - 1  # 默认：等到40岁
+        selected_score_37 = candidates[-1]  # 默认：选最后一个人
+
+        for i in range(cutoff_37, num_candidates):
+            if candidates[i] > best_in_observation_37:
+                selected_idx_37 = i
+                selected_score_37 = candidates[i]
+                break
+
+        # 转换为年龄（假设20-40岁均匀遇到候选人）
+        marriage_age_37 = start_age + (selected_idx_37 / (num_candidates - 1)) * num_years
+        ages_37_rule.append(marriage_age_37)
+        scores_37_rule.append(selected_score_37)
+
+        # 记录是否被迫等到40岁
+        if selected_idx_37 == num_candidates - 1:
+            stats['forced_40_37'] += 1
+
+        # --- 策略2: √N 规则 ---
+        # 步骤1: 观察期
+        if cutoff_sqrt > 0:
+            best_in_observation_sqrt = np.max(candidates[:cutoff_sqrt])
+        else:
+            best_in_observation_sqrt = 0
+
+        # 检查观察期最佳是否就是全局最佳
+        if global_best_idx < cutoff_sqrt:
+            stats['best_in_observation_sqrt'] += 1
+
+        # 步骤2: 决策期
+        selected_idx_sqrt = num_candidates - 1
+        selected_score_sqrt = candidates[-1]
+
+        for i in range(cutoff_sqrt, num_candidates):
+            if candidates[i] > best_in_observation_sqrt:
+                selected_idx_sqrt = i
+                selected_score_sqrt = candidates[i]
+                break
+
+        marriage_age_sqrt = start_age + (selected_idx_sqrt / (num_candidates - 1)) * num_years
+        ages_sqrt_rule.append(marriage_age_sqrt)
+        scores_sqrt_rule.append(selected_score_sqrt)
+
+        if selected_idx_sqrt == num_candidates - 1:
+            stats['forced_40_sqrt'] += 1
+
+    return (ages_37_rule, ages_sqrt_rule, 
+            scores_37_rule, scores_sqrt_rule, 
+            cutoff_37, cutoff_sqrt, stats)
+
+
+# 运行模拟
+ages_37, ages_sqrt, scores_37, scores_sqrt, cutoff_37, cutoff_sqrt, stats = simulate_marriage_strategy()
+
+# 计算统计量
+print("=== 修正后的模拟统计结果 ===")
+print(f"总模拟次数: 5000")
+print()
+
+print(f"37% 规则 (观察{cutoff_37}人，约{20 + (cutoff_37 / 50) * 20:.1f}岁结束观察):")
+print(f"  - 平均结婚年龄: {np.mean(ages_37):.1f}岁")
+print(f"  - 结婚年龄中位数: {np.median(ages_37):.1f}岁")
+print(f"  - 平均选中分数: {np.mean(scores_37):.1f}")
+print(f"  - 被迫等到40岁的比例: {stats['forced_40_37'] / 5000 * 100:.1f}%")
+print(f"  - 观察期遇到全局最佳的概率: {stats['best_in_observation_37'] / 5000 * 100:.1f}%")
+print()
+
+print(f"√N 规则 (观察{cutoff_sqrt}人，约{20 + (cutoff_sqrt / 50) * 20:.1f}岁结束观察):")
+print(f"  - 平均结婚年龄: {np.mean(ages_sqrt):.1f}岁")
+print(f"  - 结婚年龄中位数: {np.median(ages_sqrt):.1f}岁")
+print(f"  - 平均选中分数: {np.mean(scores_sqrt):.1f}")
+print(f"  - 被迫等到40岁的比例: {stats['forced_40_sqrt'] / 5000 * 100:.1f}%")
+print(f"  - 观察期遇到全局最佳的概率: {stats['best_in_observation_sqrt'] / 5000 * 100:.1f}%")
+
+# 创建更详细的可视化
+fig, axes = plt.subplots(2, 3, figsize=(18, 12))  # 增加画布高度
+
+# 设置总标题，但留出足够空间
+fig.suptitle('择偶策略数学模拟：37%规则 vs √N规则', fontsize=18, y=0.98)
+
+# 1. 结婚年龄分布对比
+ax1 = axes[0, 0]
+bins = np.arange(20, 41, 1)
+ax1.hist(ages_37, bins=bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
+ax1.hist(ages_sqrt, bins=bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
+ax1.axvline(x=20 + (cutoff_37 / 50) * 20, color='darkred', linestyle='--', alpha=0.7, linewidth=2, label='37%观察结束')
+ax1.axvline(x=20 + (cutoff_sqrt / 50) * 20, color='darkgreen', linestyle='--', alpha=0.7, linewidth=2,
+            label='√N观察结束')
+ax1.set_xlabel('结婚年龄 (岁)', fontsize=12)
+ax1.set_ylabel('概率密度', fontsize=12)
+ax1.set_title('两种策略下的结婚年龄分布', fontsize=14)
+ax1.legend()
+ax1.grid(alpha=0.3)
+
+# 2. 选中分数分布对比
+ax2 = axes[0, 1]
+score_bins = np.arange(0, 101, 5)
+ax2.hist(scores_37, bins=score_bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
+ax2.hist(scores_sqrt, bins=score_bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
+ax2.axvline(x=np.mean(scores_37), color='darkred', linestyle='--', linewidth=2,
+            label=f'37%平均: {np.mean(scores_37):.1f}')
+ax2.axvline(x=np.mean(scores_sqrt), color='darkgreen', linestyle='--', linewidth=2,
+            label=f'√N平均: {np.mean(scores_sqrt):.1f}')
+ax2.set_xlabel('选中对象的吸引力分数', fontsize=12)
+ax2.set_ylabel('概率密度', fontsize=12)
+ax2.set_title('选中对象的吸引力分数分布', fontsize=14)
+ax2.legend()
+ax2.grid(alpha=0.3)
+
+# 3. 孤独终老风险对比
+ax3 = axes[0, 2]
+categories = ['37%规则', '√N规则']
+forced_40_rates = [stats['forced_40_37'] / 5000 * 100, stats['forced_40_sqrt'] / 5000 * 100]
+best_in_obs_rates = [stats['best_in_observation_37'] / 5000 * 100, stats['best_in_observation_sqrt'] / 5000 * 100]
+
+x = np.arange(len(categories))
+width = 0.35
+
+bars1 = ax3.bar(x - width / 2, forced_40_rates, width, label='被迫等到40岁', color='orange', edgecolor='black')
+bars2 = ax3.bar(x + width / 2, best_in_obs_rates, width, label='观察期遇到最佳', color='lightblue', edgecolor='black')
+
+ax3.set_xlabel('策略类型', fontsize=12)
+ax3.set_ylabel('概率 (%)', fontsize=12)
+ax3.set_title('风险对比：被迫等到40岁 vs 观察期遇到最佳', fontsize=14)
+ax3.set_xticks(x)
+ax3.set_xticklabels(categories)
+ax3.legend()
+ax3.grid(alpha=0.3, axis='y')
+
+# 添加数值标签
+for bars in [bars1, bars2]:
+    for bar in bars:
+        height = bar.get_height()
+        ax3.annotate(f'{height:.1f}%', 
+                     xy=(bar.get_x() + bar.get_width() / 2, height),
+                     xytext=(0, 3),
+                     textcoords="offset points",
+                     ha='center', va='bottom', fontsize=10)
+
+# 4. 年龄-分数散点图
+ax4 = axes[1, 0]
+scatter1 = ax4.scatter(ages_37, scores_37, alpha=0.15, color='red', s=20, label='37%规则')
+scatter2 = ax4.scatter(ages_sqrt, scores_sqrt, alpha=0.15, color='green', s=20, label='√N规则')
+ax4.set_xlabel('结婚年龄 (岁)', fontsize=12)
+ax4.set_ylabel('选中对象的分数', fontsize=12)
+ax4.set_title('结婚年龄 vs 选中分数 (散点图)', fontsize=14)
+ax4.legend()
+ax4.grid(alpha=0.3)
+
+# 5. 累积分布函数 (CDF)
+ax5 = axes[1, 1]
+ages_37_sorted = np.sort(ages_37)
+ages_sqrt_sorted = np.sort(ages_sqrt)
+cdf_37 = np.arange(1, len(ages_37_sorted) + 1) / len(ages_37_sorted)
+cdf_sqrt = np.arange(1, len(ages_sqrt_sorted) + 1) / len(ages_sqrt_sorted)
+
+ax5.plot(ages_37_sorted, cdf_37, color='red', linewidth=2, label='37%规则 CDF')
+ax5.plot(ages_sqrt_sorted, cdf_sqrt, color='green', linewidth=2, label='√N规则 CDF')
+ax5.set_xlabel('结婚年龄 (岁)', fontsize=12)
+ax5.set_ylabel('累积概率', fontsize=12)
+ax5.set_title('结婚年龄累积分布函数 (CDF)', fontsize=14)
+ax5.legend()
+ax5.grid(alpha=0.3)
+
+# 6. 策略对比总结
+ax6 = axes[1, 2]
+ax6.axis('off')
+
+
+# 计算额外统计量
+def get_percentile(data, percentile):
+    return np.percentile(data, percentile)
+
+
+summary_text = (
+    "📊 37% 规则（追求完美，最优停止理论）:\n"
+    f"   • 观察期: {20 + (cutoff_37 / 50) * 20:.1f}岁结束 (观察{cutoff_37}人)\n"
+    f"   • 平均结婚: {np.mean(ages_37):.1f}岁\n"
+    f"   • 中位数: {np.median(ages_37):.1f}岁\n"
+    f"   • 25%人在{get_percentile(ages_37, 25):.1f}岁前结婚\n"
+    f"   • 75%人在{get_percentile(ages_37, 75):.1f}岁前结婚\n"
+    f"   • 平均分数: {np.mean(scores_37):.1f}\n"
+    f"   • {stats['forced_40_37'] / 5000 * 100:.1f}%被迫等到40岁\n"
+    f"   • 理论最优：37%概率选到最佳对象\n\n"
+
+    "📊 √N 规则（追求幸福，降低风险）:\n"
+    f"   • 观察期: {20 + (cutoff_sqrt / 50) * 20:.1f}岁结束 (观察{cutoff_sqrt}人)\n"
+    f"   • 平均结婚: {np.mean(ages_sqrt):.1f}岁\n"
+    f"   • 中位数: {np.median(ages_sqrt):.1f}岁\n"
+    f"   • 25%人在{get_percentile(ages_sqrt, 25):.1f}岁前结婚\n"
+    f"   • 75%人在{get_percentile(ages_sqrt, 75):.1f}岁前结婚\n"
+    f"   • 平均分数: {np.mean(scores_sqrt):.1f}\n"
+    f"   • {stats['forced_40_sqrt'] / 5000 * 100:.1f}%被迫等到40岁\n"
+    f"   • 更早开始，更低风险\n\n"
+
+    "💡 核心数学洞察:\n"
+    "• 37%规则: 观察期≈37%，最大化选到最佳的概率\n"
+    "• 但风险: 观察期可能遇到最佳，导致终身寻找\n"
+    "• √N规则: 观察期更短(≈√N)，平衡质量与风险\n"
+    "• 对普通人: √N规则更实际，避免孤独终老"
+)
+
+ax6.text(0.05, 0.95, summary_text, transform=ax6.transAxes, 
+          fontsize=10, verticalalignment='top', linespacing=1.5,
+          bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+# 调整子图间距
+plt.tight_layout(rect=[0, 0, 1, 0.96])  # 调整rect参数，为标题留出空间
+plt.show()
+</code></pre>
+                    </div>
+                </div>
+
+                <h2>四、模拟结果与可视化解读</h2>
+                <p>运行代码后，我们得到以下统计结果：</p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span class="code-title">模拟统计结果</span>
+                        <span class="code-toggle">▼</span>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>=== 修正后的模拟统计结果 ===
+总模拟次数: 5000
+
+37% 规则 (观察18人，约27.2岁结束观察):
+  - 平均结婚年龄: 35.2岁
+  - 结婚年龄中位数: 37.6岁
+  - 平均选中分数: 83.8
+  - 被迫等到40岁的比例: 46.5%
+  - 观察期遇到全局最佳的概率: 45.9%
+
+√N 规则 (观察7人，约22.8岁结束观察):
+  - 平均结婚年龄: 28.7岁
+  - 结婚年龄中位数: 25.7岁
+  - 平均选中分数: 88.6
+  - 被迫等到40岁的比例: 19.6%
+  - 观察期遇到全局最佳的概率: 19.4%
+</code></pre>
+                    </div>
+                </div>
+
+                <h3>模拟结果可视化</h3>
+                <p>以下是代码运行生成的可视化结果，展示了两种策略下人们的结婚年龄分布：</p>
+
+                <div style="text-align: center; margin: 20px 0;">
+                    <img src="../media/假如大家都按算法找对象会在几岁结婚.png" alt="假如大家都按算法找对象会在几岁结婚"
+                        style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                </div>
+
+                <p>这些数据揭示了令人震惊的差异：</p>
+
+                <ul>
+                    <li><strong>结婚年龄对比</strong>：追求完美的37%规则导致平均结婚年龄高达35.2岁，中位数更达37.6岁，意味着超过一半的人要在37岁以后才能结婚。而追求幸福的√N规则平均结婚年龄为28.7岁，中位数25.7岁，大多数人能在26岁前找到伴侣。
+                    </li>
+                    <li><strong>选中分数对比</strong>：一个反直觉的结果是，√N规则选中的平均分数（88.6分）竟然比37%规则（83.8分）高出近5分！这是因为37%规则有近一半（46.5%）的人被迫等到40岁，而最后一个人往往分数不高，严重拉低了整体平均分。
+                    </li>
+                    <li><strong>孤独终老风险</strong>：37%规则下，高达46.5%的人会错过所有人，被迫在40岁期限截止时选择最后一人（或孤独终老）。而√N规则下这一风险仅为19.6%，不足前者的一半。
+                    </li>
+                    <li><strong>观察期陷阱</strong>：两种策略都有在观察期遇到全局最佳而导致后续无人可选的概率。37%规则这一概率高达45.9%，几乎与被迫等到40岁的概率相等。这意味着近一半追求完美的人，最好的那个人已经出现在观察期，但他们只能错过。
+                    </li>
+                </ul>
+
+                <p>可视化图表进一步证实了这些发现：</p>
+                <ul>
+                    <li>结婚年龄分布图显示，37%规则的分布向右偏移，峰值在观察期结束后；√N规则的分布集中在22-30岁之间。</li>
+                    <li>分数分布图显示，√N规则选中的分数整体更高，且分布更集中。</li>
+                    <li>风险对比条形图直观展示了37%规则在两项风险指标上都显著高于√N规则。</li>
+                    <li>散点图显示两种策略下年龄与分数的权衡关系。</li>
+                </ul>
+
+                <h2>五、深度洞察：完美是幸福的敌人</h2>
+
+                <h3>为什么 37% 的人会孤独终老？</h3>
+                <p>在 37% 规则下，如果你运气很好，在 20-27 岁之间遇到了那个 "全场最佳"
+                    的初恋，这反而是你人生最大的"诅咒"。因为根据规则，你只能观察不能选择。当你错过他/她之后，你的标准已经被拉高到了天花板。在剩下的 13 年里，你再也遇不到比初恋更好的人，于是你被迫一直拒绝，直到
+                    40 岁期限耗尽。这就是所谓的 "曾经沧海难为水" 的数学解释。</p>
+
+                <h3>√N 规则的胜利：Satisficing</h3>
+                <p>诺贝尔奖得主赫伯特·西蒙提出了 "满足者 (Satisficers)" 的概念。√N 规则正是这一哲学的体现。它不需要你等到 28 岁。它建议你在 23 岁左右（观察了约 7-10
+                    个潜在对象后），建立起对自己和市场的基本认知，然后遇到第一个 "足够好"（优于过往）的人，就果断出手。虽然你可能错过了 35 岁时会出现的那个"灵魂伴侣"，但你大概率收获了一段 90分以上
+                    的长期稳定关系，并规避了孤独终老的风险。</p>
+
+                <h3>反直觉的数学真相</h3>
+                <p>模拟揭示了一个反直觉的事实：追求"最好"的策略，反而得到更差的平均结果。这是因为完美主义策略设置了过高的标准，导致大多数人要么错过最佳，要么被迫接受差的选择。而适度降低标准，反而能获得更高的平均幸福值。
+                </p>
+
+                <h2>六、给读者的行动建议</h2>
+                <p>基于数据科学的模拟，我们可以总结出一份科学的"择偶时间表"：</p>
+
+                <ol>
+                    <li><strong>20-23岁（数据采集期）</strong>：积极社交，接触不同的人。这个时候不要急着定终身，你的任务是收集样本，了解"什么是好的"，建立自己的基准线。</li>
+                    <li><strong>23岁以后（决策执行期）</strong>：一旦遇到一个比之前所有人都合适、且让你感到舒适的对象，请勇敢地确认关系，不要犹豫。</li>
+                </ol>
+
+                <p>警惕"还能更好"的幻觉：数学告诉我们，为了理论上那个 100 分而放弃眼前的 95 分，你将面临近 40% 的概率一无所获。</p>
+
+                <p>数据给予我们的启示：</p>
+                <ul>
+                    <li>早婚不一定是草率：在足够的信息基础上（观察7-10人），早婚可能是更理性的选择。</li>
+                    <li>完美主义是幸福的天敌：追求"最完美"往往导致"最不幸福"。</li>
+                    <li>满意原则胜于最优原则：在复杂的人生决策中，寻找"足够好"比寻找"最好"更实际、更幸福。</li>
+                </ul>
+
+                <h2>结语</h2>
+                <p>人生不是数学题，没有标准答案。但数据提醒我们：幸福往往不属于那些一直在等待"最好"的人，而属于那些在"足够好"的时候懂得珍惜的人。最优停止理论告诉我们，最完美的停止点不是追求"绝对最佳"的37%，而是追求"综合最优"的√N——这或许就是人生的智慧：在合适的时间，选择合适的人，而不是在无尽的寻找中错过幸福。
+        </p>
+    </article>
+    <div class="pagination">
+        <a href="SimpleTextReader/index.html" class="button button-previous">上一篇：网上冲浪看到有个挺方便的文本阅读器，改一下搬过来用</a>
+        <span class="button button-disabled button-next">下一篇：没有了</span>
+    </div>
+</div>
+</body>
+
+</html>

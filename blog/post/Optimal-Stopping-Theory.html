@@ -312,7 +312,7 @@ plt.rcParams['axes.unicode_minus'] = False
 def simulate_marriage_strategy(num_years=20, start_age=20, num_candidates=50, simulations=5000):
     """
     模拟两种择偶策略：37%规则 vs √N规则
-    修复逻辑：观察期只看不选，记录最佳分数
+    逻辑：观察期只看不选，记录最佳分数
     """
     np.random.seed(42)
 
@@ -406,7 +406,7 @@ def simulate_marriage_strategy(num_years=20, start_age=20, num_candidates=50, si
 ages_37, ages_sqrt, scores_37, scores_sqrt, cutoff_37, cutoff_sqrt, stats = simulate_marriage_strategy()
 
 # 计算统计量
-print("=== 修正后的模拟统计结果 ===")
+print("=== 模拟统计结果 ===")
 print(f"总模拟次数: 5000")
 print()
 
@@ -573,7 +573,7 @@ plt.show()
                         <span class="code-toggle">▼</span>
                     </div>
                     <div class="code-content">
-                        <pre><code>=== 修正后的模拟统计结果 ===
+                        <pre><code>=== 模拟统计结果 ===
 总模拟次数: 5000
 
 37% 规则 (观察18人，约27.2岁结束观察):

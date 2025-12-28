@@ -309,257 +309,267 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False
 
+
 def simulate_marriage_strategy(num_years=20, start_age=20, num_candidates=50, simulations=5000):
-    """
-    模拟两种择偶策略：37%规则 vs √N规则
-    逻辑：观察期只看不选，记录最佳分数
-    """
-    np.random.seed(42)
+"""
+模拟两种择偶策略：37%规则 vs √N规则
+"""
+np.random.seed(42)
 
-    ages_37_rule = []
-    ages_sqrt_rule = []
-    scores_37_rule = []
-    scores_sqrt_rule = []
+ages_37_rule = []
+ages_sqrt_rule = []
+scores_37_rule = []
+scores_sqrt_rule = []
 
-    # 计算观察期人数（只看不选）
-    cutoff_37 = int(num_candidates * 0.37)  # 观察18人，约27.2岁结束观察
-    cutoff_sqrt = int(np.sqrt(num_candidates))  # 观察7人，约22.8岁结束观察
+# 计算观察期人数（只看不选）
+cutoff_37 = int(num_candidates * 0.37) # 观察18人
+cutoff_sqrt = int(np.sqrt(num_candidates)) # 观察7人
 
-    # 记录统计数据
-    stats = {
-        'forced_40_37': 0,
-        'forced_40_sqrt': 0,
-        'best_in_observation_37': 0,
-        'best_in_observation_sqrt': 0
-    }
+# 记录统计数据
+stats = {
+'forced_40_37': 0,
+'forced_40_sqrt': 0,
+'best_in_observation_37': 0,
+'best_in_observation_sqrt': 0,
+'chose_best_37': 0,
+'chose_best_sqrt': 0
+}
 
-    for sim in range(simulations):
-        # 生成候选人：每个人的吸引力分数（0-100）
-        candidates = np.random.normal(loc=70, scale=15, size=num_candidates)
-        candidates = np.clip(candidates, 0, 100)  # 限制在0-100分
+for sim in range(simulations):
+# 生成候选人：每个人的吸引力分数（0-100）
+candidates = np.random.normal(loc=70, scale=15, size=num_candidates)
+candidates = np.clip(candidates, 0, 100) # 限制在0-100分
 
-        # --- 策略1: 37% 规则 (1/e 策略) ---
-        # 步骤1: 观察期（只看不选，建立标准）
-        if cutoff_37 > 0:
-            best_in_observation_37 = np.max(candidates[:cutoff_37])
-        else:
-            best_in_observation_37 = 0
+# 全局最佳信息
+global_best_score = np.max(candidates)
+global_best_idx = np.argmax(candidates)
 
-        # 检查观察期最佳是否就是全局最佳（这将导致"孤独终老"风险）
-        global_best_idx = np.argmax(candidates)
-        if global_best_idx < cutoff_37:
-            stats['best_in_observation_37'] += 1
+# --- 策略1: 37% 规则 (1/e 策略) ---
+# 步骤1: 观察期（只看不选，建立标准）
+if cutoff_37 > 0:
+best_in_observation_37 = np.max(candidates[:cutoff_37])
+else:
+best_in_observation_37 = 0
 
-        # 步骤2: 决策期（选择第一个比观察期最佳更好的）
-        selected_idx_37 = num_candidates - 1  # 默认：等到40岁
-        selected_score_37 = candidates[-1]  # 默认：选最后一个人
+# 检查观察期最佳是否就是全局最佳
+if global_best_idx < cutoff_37: stats['best_in_observation_37'] +=1 # 步骤2: 决策期（选择第一个比观察期最佳更好的） selected_idx_37=-1
+    selected_score_37=0 for i in range(cutoff_37, num_candidates): if candidates[i]> best_in_observation_37:
+    selected_idx_37 = i
+    selected_score_37 = candidates[i]
+    break
 
-        for i in range(cutoff_37, num_candidates):
-            if candidates[i] > best_in_observation_37:
-                selected_idx_37 = i
-                selected_score_37 = candidates[i]
-                break
+    # 如果没有找到更好的，选择最后一个人
+    if selected_idx_37 == -1:
+    selected_idx_37 = num_candidates - 1
+    selected_score_37 = candidates[-1]
+    stats['forced_40_37'] += 1
 
-        # 转换为年龄（假设20-40岁均匀遇到候选人）
-        marriage_age_37 = start_age + (selected_idx_37 / (num_candidates - 1)) * num_years
-        ages_37_rule.append(marriage_age_37)
-        scores_37_rule.append(selected_score_37)
+    # 检查是否选中了全局最佳
+    if candidates[selected_idx_37] == global_best_score:
+    stats['chose_best_37'] += 1
 
-        # 记录是否被迫等到40岁
-        if selected_idx_37 == num_candidates - 1:
-            stats['forced_40_37'] += 1
+    # 转换为年龄（假设20-40岁均匀遇到候选人）
+    marriage_age_37 = start_age + (selected_idx_37 / (num_candidates - 1)) * num_years
+    ages_37_rule.append(marriage_age_37)
+    scores_37_rule.append(selected_score_37)
 
-        # --- 策略2: √N 规则 ---
-        # 步骤1: 观察期
-        if cutoff_sqrt > 0:
-            best_in_observation_sqrt = np.max(candidates[:cutoff_sqrt])
-        else:
-            best_in_observation_sqrt = 0
+    # --- 策略2: √N 规则 ---
+    # 步骤1: 观察期
+    if cutoff_sqrt > 0:
+    best_in_observation_sqrt = np.max(candidates[:cutoff_sqrt])
+    else:
+    best_in_observation_sqrt = 0
 
-        # 检查观察期最佳是否就是全局最佳
-        if global_best_idx < cutoff_sqrt:
-            stats['best_in_observation_sqrt'] += 1
+    # 检查观察期最佳是否就是全局最佳
+    if global_best_idx < cutoff_sqrt: stats['best_in_observation_sqrt'] +=1 # 步骤2: 决策期 selected_idx_sqrt=-1
+        selected_score_sqrt=0 for i in range(cutoff_sqrt, num_candidates): if candidates[i]> best_in_observation_sqrt:
+        selected_idx_sqrt = i
+        selected_score_sqrt = candidates[i]
+        break
 
-        # 步骤2: 决策期
+        # 如果没有找到更好的，选择最后一个人
+        if selected_idx_sqrt == -1:
         selected_idx_sqrt = num_candidates - 1
         selected_score_sqrt = candidates[-1]
+        stats['forced_40_sqrt'] += 1
 
-        for i in range(cutoff_sqrt, num_candidates):
-            if candidates[i] > best_in_observation_sqrt:
-                selected_idx_sqrt = i
-                selected_score_sqrt = candidates[i]
-                break
+        # 检查是否选中了全局最佳
+        if candidates[selected_idx_sqrt] == global_best_score:
+        stats['chose_best_sqrt'] += 1
 
+        # 转换为年龄
         marriage_age_sqrt = start_age + (selected_idx_sqrt / (num_candidates - 1)) * num_years
         ages_sqrt_rule.append(marriage_age_sqrt)
         scores_sqrt_rule.append(selected_score_sqrt)
 
-        if selected_idx_sqrt == num_candidates - 1:
-            stats['forced_40_sqrt'] += 1
-
-    return (ages_37_rule, ages_sqrt_rule, 
-            scores_37_rule, scores_sqrt_rule, 
-            cutoff_37, cutoff_sqrt, stats)
+        return (ages_37_rule, ages_sqrt_rule,
+        scores_37_rule, scores_sqrt_rule,
+        cutoff_37, cutoff_sqrt, stats)
 
 
-# 运行模拟
-ages_37, ages_sqrt, scores_37, scores_sqrt, cutoff_37, cutoff_sqrt, stats = simulate_marriage_strategy()
+        # 运行模拟
+        ages_37, ages_sqrt, scores_37, scores_sqrt, cutoff_37, cutoff_sqrt, stats = simulate_marriage_strategy()
 
-# 计算统计量
-print("=== 模拟统计结果 ===")
-print(f"总模拟次数: 5000")
-print()
+        # 计算统计量
+        print("=== 模拟统计结果 ===")
+        print(f"总模拟次数: 5000")
+        print()
 
-print(f"37% 规则 (观察{cutoff_37}人，约{20 + (cutoff_37 / 50) * 20:.1f}岁结束观察):")
-print(f"  - 平均结婚年龄: {np.mean(ages_37):.1f}岁")
-print(f"  - 结婚年龄中位数: {np.median(ages_37):.1f}岁")
-print(f"  - 平均选中分数: {np.mean(scores_37):.1f}")
-print(f"  - 被迫等到40岁的比例: {stats['forced_40_37'] / 5000 * 100:.1f}%")
-print(f"  - 观察期遇到全局最佳的概率: {stats['best_in_observation_37'] / 5000 * 100:.1f}%")
-print()
+        print(f"37% 规则 (观察{cutoff_37}人，约{20 + (cutoff_37 / 50) * 20:.1f}岁结束观察):")
+        print(f" - 平均结婚年龄: {np.mean(ages_37):.1f}岁")
+        print(f" - 结婚年龄中位数: {np.median(ages_37):.1f}岁")
+        print(f" - 25%人在{np.percentile(ages_37, 25):.1f}岁前结婚")
+        print(f" - 50%人在{np.percentile(ages_37, 50):.1f}岁前结婚")
+        print(f" - 平均选中分数: {np.mean(scores_37):.1f}")
+        print(f" - 被迫等到40岁的比例: {stats['forced_40_37'] / 5000 * 100:.1f}%")
+        print(f" - 观察期遇到全局最佳的概率: {stats['best_in_observation_37'] / 5000 * 100:.1f}%")
+        print(f" - 实际选中全局最佳的概率: {stats['chose_best_37'] / 5000 * 100:.1f}%")
+        print()
 
-print(f"√N 规则 (观察{cutoff_sqrt}人，约{20 + (cutoff_sqrt / 50) * 20:.1f}岁结束观察):")
-print(f"  - 平均结婚年龄: {np.mean(ages_sqrt):.1f}岁")
-print(f"  - 结婚年龄中位数: {np.median(ages_sqrt):.1f}岁")
-print(f"  - 平均选中分数: {np.mean(scores_sqrt):.1f}")
-print(f"  - 被迫等到40岁的比例: {stats['forced_40_sqrt'] / 5000 * 100:.1f}%")
-print(f"  - 观察期遇到全局最佳的概率: {stats['best_in_observation_sqrt'] / 5000 * 100:.1f}%")
+        print(f"√N 规则 (观察{cutoff_sqrt}人，约{20 + (cutoff_sqrt / 50) * 20:.1f}岁结束观察):")
+        print(f" - 平均结婚年龄: {np.mean(ages_sqrt):.1f}岁")
+        print(f" - 结婚年龄中位数: {np.median(ages_sqrt):.1f}岁")
+        print(f" - 25%人在{np.percentile(ages_sqrt, 25):.1f}岁前结婚")
+        print(f" - 75%人在{np.percentile(ages_sqrt, 75):.1f}岁前结婚")
+        print(f" - 平均选中分数: {np.mean(scores_sqrt):.1f}")
+        print(f" - 被迫等到40岁的比例: {stats['forced_40_sqrt'] / 5000 * 100:.1f}%")
+        print(f" - 观察期遇到全局最佳的概率: {stats['best_in_observation_sqrt'] / 5000 * 100:.1f}%")
+        print(f" - 实际选中全局最佳的概率: {stats['chose_best_sqrt'] / 5000 * 100:.1f}%")
 
-# 创建更详细的可视化
-fig, axes = plt.subplots(2, 3, figsize=(18, 12))  # 增加画布高度
+        # 创建更详细的可视化
+        fig, axes = plt.subplots(2, 3, figsize=(18, 12))
 
-# 设置总标题，但留出足够空间
-fig.suptitle('择偶策略数学模拟：37%规则 vs √N规则', fontsize=18, y=0.98)
+        # 设置总标题
+        fig.suptitle('择偶策略数学模拟：37%规则 vs √N规则', fontsize=18, y=0.98)
 
-# 1. 结婚年龄分布对比
-ax1 = axes[0, 0]
-bins = np.arange(20, 41, 1)
-ax1.hist(ages_37, bins=bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
-ax1.hist(ages_sqrt, bins=bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
-ax1.axvline(x=20 + (cutoff_37 / 50) * 20, color='darkred', linestyle='--', alpha=0.7, linewidth=2, label='37%观察结束')
-ax1.axvline(x=20 + (cutoff_sqrt / 50) * 20, color='darkgreen', linestyle='--', alpha=0.7, linewidth=2,
-            label='√N观察结束')
-ax1.set_xlabel('结婚年龄 (岁)', fontsize=12)
-ax1.set_ylabel('概率密度', fontsize=12)
-ax1.set_title('两种策略下的结婚年龄分布', fontsize=14)
-ax1.legend()
-ax1.grid(alpha=0.3)
+        # 1. 结婚年龄分布对比
+        ax1 = axes[0, 0]
+        bins = np.arange(20, 41, 1)
+        ax1.hist(ages_37, bins=bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
+        ax1.hist(ages_sqrt, bins=bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
+        ax1.axvline(x=20 + (cutoff_37 / 50) * 20, color='darkred', linestyle='--', alpha=0.7, linewidth=2,
+        label='37%观察结束')
+        ax1.axvline(x=20 + (cutoff_sqrt / 50) * 20, color='darkgreen', linestyle='--', alpha=0.7, linewidth=2,
+        label='√N观察结束')
+        ax1.set_xlabel('结婚年龄 (岁)', fontsize=12)
+        ax1.set_ylabel('概率密度', fontsize=12)
+        ax1.set_title('两种策略下的结婚年龄分布', fontsize=14)
+        ax1.legend()
+        ax1.grid(alpha=0.3)
 
-# 2. 选中分数分布对比
-ax2 = axes[0, 1]
-score_bins = np.arange(0, 101, 5)
-ax2.hist(scores_37, bins=score_bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
-ax2.hist(scores_sqrt, bins=score_bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
-ax2.axvline(x=np.mean(scores_37), color='darkred', linestyle='--', linewidth=2,
-            label=f'37%平均: {np.mean(scores_37):.1f}')
-ax2.axvline(x=np.mean(scores_sqrt), color='darkgreen', linestyle='--', linewidth=2,
-            label=f'√N平均: {np.mean(scores_sqrt):.1f}')
-ax2.set_xlabel('选中对象的吸引力分数', fontsize=12)
-ax2.set_ylabel('概率密度', fontsize=12)
-ax2.set_title('选中对象的吸引力分数分布', fontsize=14)
-ax2.legend()
-ax2.grid(alpha=0.3)
+        # 2. 选中分数分布对比
+        ax2 = axes[0, 1]
+        score_bins = np.arange(0, 101, 5)
+        ax2.hist(scores_37, bins=score_bins, alpha=0.6, color='red', label='37%规则', density=True, edgecolor='black')
+        ax2.hist(scores_sqrt, bins=score_bins, alpha=0.6, color='green', label='√N规则', density=True, edgecolor='black')
+        ax2.axvline(x=np.mean(scores_37), color='darkred', linestyle='--', linewidth=2,
+        label=f'37%平均: {np.mean(scores_37):.1f}')
+        ax2.axvline(x=np.mean(scores_sqrt), color='darkgreen', linestyle='--', linewidth=2,
+        label=f'√N平均: {np.mean(scores_sqrt):.1f}')
+        ax2.set_xlabel('选中对象的吸引力分数', fontsize=12)
+        ax2.set_ylabel('概率密度', fontsize=12)
+        ax2.set_title('选中对象的吸引力分数分布', fontsize=14)
+        ax2.legend()
+        ax2.grid(alpha=0.3)
 
-# 3. 孤独终老风险对比
-ax3 = axes[0, 2]
-categories = ['37%规则', '√N规则']
-forced_40_rates = [stats['forced_40_37'] / 5000 * 100, stats['forced_40_sqrt'] / 5000 * 100]
-best_in_obs_rates = [stats['best_in_observation_37'] / 5000 * 100, stats['best_in_observation_sqrt'] / 5000 * 100]
+        # 3. 风险对比
+        ax3 = axes[0, 2]
+        categories = ['37%规则', '√N规则']
+        forced_40_rates = [stats['forced_40_37'] / 5000 * 100, stats['forced_40_sqrt'] / 5000 * 100]
+        best_in_obs_rates = [stats['best_in_observation_37'] / 5000 * 100, stats['best_in_observation_sqrt'] / 5000 *
+        100]
+        chose_best_rates = [stats['chose_best_37'] / 5000 * 100, stats['chose_best_sqrt'] / 5000 * 100]
 
-x = np.arange(len(categories))
-width = 0.35
+        x = np.arange(len(categories))
+        width = 0.25
 
-bars1 = ax3.bar(x - width / 2, forced_40_rates, width, label='被迫等到40岁', color='orange', edgecolor='black')
-bars2 = ax3.bar(x + width / 2, best_in_obs_rates, width, label='观察期遇到最佳', color='lightblue', edgecolor='black')
+        bars1 = ax3.bar(x - width, forced_40_rates, width, label='被迫等到40岁', color='orange', edgecolor='black')
+        bars2 = ax3.bar(x, best_in_obs_rates, width, label='观察期遇到最佳', color='lightblue', edgecolor='black')
+        bars3 = ax3.bar(x + width, chose_best_rates, width, label='实际选中最佳', color='lightgreen', edgecolor='black')
 
-ax3.set_xlabel('策略类型', fontsize=12)
-ax3.set_ylabel('概率 (%)', fontsize=12)
-ax3.set_title('风险对比：被迫等到40岁 vs 观察期遇到最佳', fontsize=14)
-ax3.set_xticks(x)
-ax3.set_xticklabels(categories)
-ax3.legend()
-ax3.grid(alpha=0.3, axis='y')
+        ax3.set_xlabel('策略类型', fontsize=12)
+        ax3.set_ylabel('概率 (%)', fontsize=12)
+        ax3.set_title('风险与收益对比', fontsize=14)
+        ax3.set_xticks(x)
+        ax3.set_xticklabels(categories)
+        ax3.legend()
+        ax3.grid(alpha=0.3, axis='y')
 
-# 添加数值标签
-for bars in [bars1, bars2]:
-    for bar in bars:
+        # 添加数值标签
+        for bars in [bars1, bars2, bars3]:
+        for bar in bars:
         height = bar.get_height()
-        ax3.annotate(f'{height:.1f}%', 
-                     xy=(bar.get_x() + bar.get_width() / 2, height),
-                     xytext=(0, 3),
-                     textcoords="offset points",
-                     ha='center', va='bottom', fontsize=10)
+        ax3.annotate(f'{height:.1f}%',
+        xy=(bar.get_x() + bar.get_width() / 2, height),
+        xytext=(0, 3),
+        textcoords="offset points",
+        ha='center', va='bottom', fontsize=9)
 
-# 4. 年龄-分数散点图
-ax4 = axes[1, 0]
-scatter1 = ax4.scatter(ages_37, scores_37, alpha=0.15, color='red', s=20, label='37%规则')
-scatter2 = ax4.scatter(ages_sqrt, scores_sqrt, alpha=0.15, color='green', s=20, label='√N规则')
-ax4.set_xlabel('结婚年龄 (岁)', fontsize=12)
-ax4.set_ylabel('选中对象的分数', fontsize=12)
-ax4.set_title('结婚年龄 vs 选中分数 (散点图)', fontsize=14)
-ax4.legend()
-ax4.grid(alpha=0.3)
+        # 4. 年龄-分数散点图
+        ax4 = axes[1, 0]
+        scatter1 = ax4.scatter(ages_37, scores_37, alpha=0.15, color='red', s=20, label='37%规则')
+        scatter2 = ax4.scatter(ages_sqrt, scores_sqrt, alpha=0.15, color='green', s=20, label='√N规则')
+        ax4.set_xlabel('结婚年龄 (岁)', fontsize=12)
+        ax4.set_ylabel('选中对象的分数', fontsize=12)
+        ax4.set_title('结婚年龄 vs 选中分数 (散点图)', fontsize=14)
+        ax4.legend()
+        ax4.grid(alpha=0.3)
 
-# 5. 累积分布函数 (CDF)
-ax5 = axes[1, 1]
-ages_37_sorted = np.sort(ages_37)
-ages_sqrt_sorted = np.sort(ages_sqrt)
-cdf_37 = np.arange(1, len(ages_37_sorted) + 1) / len(ages_37_sorted)
-cdf_sqrt = np.arange(1, len(ages_sqrt_sorted) + 1) / len(ages_sqrt_sorted)
+        # 5. 累积分布函数 (CDF)
+        ax5 = axes[1, 1]
+        ages_37_sorted = np.sort(ages_37)
+        ages_sqrt_sorted = np.sort(ages_sqrt)
+        cdf_37 = np.arange(1, len(ages_37_sorted) + 1) / len(ages_37_sorted)
+        cdf_sqrt = np.arange(1, len(ages_sqrt_sorted) + 1) / len(ages_sqrt_sorted)
 
-ax5.plot(ages_37_sorted, cdf_37, color='red', linewidth=2, label='37%规则 CDF')
-ax5.plot(ages_sqrt_sorted, cdf_sqrt, color='green', linewidth=2, label='√N规则 CDF')
-ax5.set_xlabel('结婚年龄 (岁)', fontsize=12)
-ax5.set_ylabel('累积概率', fontsize=12)
-ax5.set_title('结婚年龄累积分布函数 (CDF)', fontsize=14)
-ax5.legend()
-ax5.grid(alpha=0.3)
+        ax5.plot(ages_37_sorted, cdf_37, color='red', linewidth=2, label='37%规则 CDF')
+        ax5.plot(ages_sqrt_sorted, cdf_sqrt, color='green', linewidth=2, label='√N规则 CDF')
+        ax5.set_xlabel('结婚年龄 (岁)', fontsize=12)
+        ax5.set_ylabel('累积概率', fontsize=12)
+        ax5.set_title('结婚年龄累积分布函数 (CDF)', fontsize=14)
+        ax5.legend()
+        ax5.grid(alpha=0.3)
 
-# 6. 策略对比总结
-ax6 = axes[1, 2]
-ax6.axis('off')
+        # 6. 策略对比总结
+        ax6 = axes[1, 2]
+        ax6.axis('off')
 
+        summary_text = (
+        "📊 37% 规则（经典秘书问题解法）:\n"
+        f" • 观察期: 20-{20 + (cutoff_37 / 50) * 20:.1f}岁 (观察{cutoff_37}人，建立标准)\n"
+        f" • 决策期: {20 + (cutoff_37 / 50) * 20:.1f}-40岁 (选择第一个比观察期最佳更好的)\n"
+        f" • 平均结婚年龄: {np.mean(ages_37):.1f}岁\n"
+        f" • 25%人在{np.percentile(ages_37, 25):.1f}岁前结婚\n"
+        f" • 50%人在{np.percentile(ages_37, 50):.1f}岁前结婚\n"
+        f" • 选中对象的平均分数: {np.mean(scores_37):.1f}/100\n"
+        f" • {stats['forced_40_37'] / 5000 * 100:.1f}%被迫等到40岁选择最后一人\n"
+        f" • {stats['chose_best_37'] / 5000 * 100:.1f}%实际选中了全局最佳\n\n"
 
-# 计算额外统计量
-def get_percentile(data, percentile):
-    return np.percentile(data, percentile)
+        "📊 √N 规则（实践优化，平衡风险）:\n"
+        f" • 观察期: 20-{20 + (cutoff_sqrt / 50) * 20:.1f}岁 (观察{cutoff_sqrt}人，建立标准)\n"
+        f" • 决策期: {20 + (cutoff_sqrt / 50) * 20:.1f}-40岁 (选择第一个比观察期最佳更好的)\n"
+        f" • 平均结婚年龄: {np.mean(ages_sqrt):.1f}岁\n"
+        f" • 25%人在{np.percentile(ages_sqrt, 25):.1f}岁前结婚\n"
+        f" • 75%人在{np.percentile(ages_sqrt, 75):.1f}岁前结婚\n"
+        f" • 选中对象的平均分数: {np.mean(scores_sqrt):.1f}/100\n"
+        f" • {stats['forced_40_sqrt'] / 5000 * 100:.1f}%被迫等到40岁选择最后一人\n"
+        f" • {stats['chose_best_sqrt'] / 5000 * 100:.1f}%实际选中了全局最佳\n\n"
 
+        f"💡 关键数学洞察:\n"
+        f"• 37%规则: 观察前37%候选人，理论上最大化选到最佳的概率\n"
+        f"• 但实际中，由于观察期可能错过最佳，导致标准过高\n"
+        f"• √N规则: 观察更少(√N)人，更早开始决策，降低风险\n"
+        f"• 模拟结果: √N规则结婚更早({np.mean(ages_sqrt):.1f} vs {np.mean(ages_37):.1f}岁)\n"
+        f"• 分数相近: 两种策略选中分数相近({np.mean(scores_sqrt):.1f} vs {np.mean(scores_37):.1f})\n"
+        )
 
-summary_text = (
-    "📊 37% 规则（追求完美，最优停止理论）:\n"
-    f"   • 观察期: {20 + (cutoff_37 / 50) * 20:.1f}岁结束 (观察{cutoff_37}人)\n"
-    f"   • 平均结婚: {np.mean(ages_37):.1f}岁\n"
-    f"   • 中位数: {np.median(ages_37):.1f}岁\n"
-    f"   • 25%人在{get_percentile(ages_37, 25):.1f}岁前结婚\n"
-    f"   • 75%人在{get_percentile(ages_37, 75):.1f}岁前结婚\n"
-    f"   • 平均分数: {np.mean(scores_37):.1f}\n"
-    f"   • {stats['forced_40_37'] / 5000 * 100:.1f}%被迫等到40岁\n"
-    f"   • 理论最优：37%概率选到最佳对象\n\n"
+        ax6.text(0.05, 0.95, summary_text, transform=ax6.transAxes,
+        fontsize=10, verticalalignment='top', linespacing=1.3,
+        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
-    "📊 √N 规则（追求幸福，降低风险）:\n"
-    f"   • 观察期: {20 + (cutoff_sqrt / 50) * 20:.1f}岁结束 (观察{cutoff_sqrt}人)\n"
-    f"   • 平均结婚: {np.mean(ages_sqrt):.1f}岁\n"
-    f"   • 中位数: {np.median(ages_sqrt):.1f}岁\n"
-    f"   • 25%人在{get_percentile(ages_sqrt, 25):.1f}岁前结婚\n"
-    f"   • 75%人在{get_percentile(ages_sqrt, 75):.1f}岁前结婚\n"
-    f"   • 平均分数: {np.mean(scores_sqrt):.1f}\n"
-    f"   • {stats['forced_40_sqrt'] / 5000 * 100:.1f}%被迫等到40岁\n"
-    f"   • 更早开始，更低风险\n\n"
-
-    "💡 核心数学洞察:\n"
-    "• 37%规则: 观察期≈37%，最大化选到最佳的概率\n"
-    "• 但风险: 观察期可能遇到最佳，导致终身寻找\n"
-    "• √N规则: 观察期更短(≈√N)，平衡质量与风险\n"
-    "• 对普通人: √N规则更实际，避免孤独终老"
-)
-
-ax6.text(0.05, 0.95, summary_text, transform=ax6.transAxes, 
-          fontsize=10, verticalalignment='top', linespacing=1.5,
-          bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-
-# 调整子图间距
-plt.tight_layout(rect=[0, 0, 1, 0.96])  # 调整rect参数，为标题留出空间
-plt.show()
+        # 调整子图间距
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        plt.show()
 </code></pre>
                     </div>
                 </div>
@@ -579,17 +589,22 @@ plt.show()
 37% 规则 (观察18人，约27.2岁结束观察):
   - 平均结婚年龄: 35.2岁
   - 结婚年龄中位数: 37.6岁
+  - 25%人在29.8岁前结婚
+  - 50%人在37.6岁前结婚
   - 平均选中分数: 83.8
-  - 被迫等到40岁的比例: 46.5%
+  - 被迫等到40岁的比例: 45.9%
   - 观察期遇到全局最佳的概率: 45.9%
+  - 实际选中全局最佳的概率: 34.2%
 
 √N 规则 (观察7人，约22.8岁结束观察):
   - 平均结婚年龄: 28.7岁
   - 结婚年龄中位数: 25.7岁
+  - 25%人在23.7岁前结婚
+  - 75%人在32.7岁前结婚
   - 平均选中分数: 88.6
-  - 被迫等到40岁的比例: 19.6%
+  - 被迫等到40岁的比例: 19.4%
   - 观察期遇到全局最佳的概率: 19.4%
-</code></pre>
+  - 实际选中全局最佳的概率: 29.5%</code></pre>
                     </div>
                 </div>
 
@@ -604,13 +619,15 @@ plt.show()
                 <p>这些数据揭示了令人震惊的差异：</p>
 
                 <ul>
-                    <li><strong>结婚年龄对比</strong>：追求完美的37%规则导致平均结婚年龄高达35.2岁，中位数更达37.6岁，意味着超过一半的人要在37岁以后才能结婚。而追求幸福的√N规则平均结婚年龄为28.7岁，中位数25.7岁，大多数人能在26岁前找到伴侣。
+                    <li><strong>结婚年龄对比</strong>：追求完美的37%规则导致平均结婚年龄高达35.2岁，中位数更达37.6岁，50%人在37.6岁前结婚，意味着相当一部分人接近 deadline 才找到伴侣。而追求幸福的√N规则平均结婚年龄为28.7岁，中位数25.7岁，75%的人在32.7岁前结婚，大多数人能在更早的年龄找到伴侣。
                     </li>
-                    <li><strong>选中分数对比</strong>：一个反直觉的结果是，√N规则选中的平均分数（88.6分）竟然比37%规则（83.8分）高出近5分！这是因为37%规则有近一半（46.5%）的人被迫等到40岁，而最后一个人往往分数不高，严重拉低了整体平均分。
+                    <li><strong>选中分数对比</strong>：一个反直觉的结果是，√N规则选中的平均分数（88.6分）竟然比37%规则（83.8分）高出近5分！这是因为37%规则有近一半（45.9%）的人被迫等到40岁，而最后一个人往往分数不高，严重拉低了整体平均分。
                     </li>
-                    <li><strong>孤独终老风险</strong>：37%规则下，高达46.5%的人会错过所有人，被迫在40岁期限截止时选择最后一人（或孤独终老）。而√N规则下这一风险仅为19.6%，不足前者的一半。
+                    <li><strong>孤独终老风险</strong>：37%规则下，高达45.9%的人会错过所有人，被迫在40岁期限截止时选择最后一人（或孤独终老）。而√N规则下这一风险仅为19.4%，不足前者的一半。
                     </li>
-                    <li><strong>观察期陷阱</strong>：两种策略都有在观察期遇到全局最佳而导致后续无人可选的概率。37%规则这一概率高达45.9%，几乎与被迫等到40岁的概率相等。这意味着近一半追求完美的人，最好的那个人已经出现在观察期，但他们只能错过。
+                    <li><strong>观察期陷阱</strong>：两种策略都有在观察期遇到全局最佳而导致后续无人可选的概率。37%规则这一概率高达45.9%，几乎与被迫等到40岁的概率相等。而√N规则这一概率仅为19.4%。
+                    </li>
+                    <li><strong>实际选中全局最佳的概率</strong>：尽管37%规则理论上是为了最大化选中全局最佳的概率，但实际选中概率仅为34.2%。而√N规则虽然观察期更短，但实际选中全局最佳的概率也达到了29.5%，与37%规则的差距并不大。
                     </li>
                 </ul>
 

@@ -49,8 +49,8 @@ html {
   color: black;
 }
 pre {
-  background-color: #f5f2f0;
-  text-shadow: 0 1px white;
+  background-color: #282c34;
+  text-shadow: none;
   font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
   text-align: left;
   white-space: pre;
@@ -64,6 +64,12 @@ pre {
   -moz-hyphens: none;
   -ms-hyphens: none;
   hyphens: none;
+  font-size: 13px;
+}
+
+code {
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  font-size: 13px;
 }
 img {
   max-width: 100%;
@@ -141,38 +147,7 @@ body {
   width: 600px;
   margin: auto;
 }
-#header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 75px;
-  height: 100%;
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  box-shadow: 0 3px 5px #2c3e50;
-}
-#header a {
-  text-decoration: none;
-  color: #ecf0f1;
-}
 
-#title {
-  font-family: "Verdana", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
-  font-size: 16px;
-  text-align: center;
-  margin-left: -8px;
-  margin-top: 10px;
-  font-weight: normal;
-  margin-bottom: auto;
-}
-
-#title > a {
-  text-decoration: none;
-  color: #ecf0f1;
-}
-#header .links {
-  margin-top: 10px;
-}
 
 footer,
 section,
@@ -263,24 +238,7 @@ footer {
   color: inherit;
 }
 
-.pagination {
-  line-height: 36px;
-  text-align: center;
-  overflow: hidden;
-  width: 750px;
-}
 
-.pagination p.date {
-  line-height: 36px;
-}
-
-.pagination .button-previous {
-  float: left;
-}
-
-.pagination .button-next {
-  float: right;
-}
 
 @media print, screen and (max-width: 860px) {
   .pullquote-right {

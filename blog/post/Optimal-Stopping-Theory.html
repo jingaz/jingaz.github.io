@@ -5,18 +5,29 @@
     <meta name="author" content="liujing" charset="utf-8">
     <title>用 Python 模拟人生：择偶决策中的最优停止理论</title>
     <link href="../assets/index.css" rel="stylesheet">
-    <link href="../assets/solarized-dark.min.css" rel="stylesheet">
+    <link href="../assets/atom-one-dark.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="../media/image.svg">
     <!-- KaTeX库用于渲染LaTeX公式 -->
     <link rel="stylesheet" href="../assets/katex.min.css">
     <script defer src="../assets/katex.min.js"></script>
     <script defer src="../assets/auto-render.min.js"></script>
+    
+    <!-- highlight.js库用于代码语法高亮 -->
+    <link rel="stylesheet" href="../assets/atom-one-dark.min.css">
+    <script src="../assets/highlight.min.js"></script>
+    <script src="../assets/python.min.js"></script>
+    
+    <!-- 初始化highlight.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            hljs.highlightAll();
+        });
+    </script>
 
     <style>
         /* 代码块容器样式 */
         .code-container {
-            background-color: #f5f7fa;
-            border: 1px solid #e1e8ed;
+            border: 1px solid #444;
             border-radius: 8px;
             margin: 20px 0;
             overflow: hidden;
@@ -24,7 +35,7 @@
 
         /* 代码块标题栏样式 */
         .code-header {
-            background-color: #e9ecef;
+            background-color: #3a3f4b;
             padding: 10px 15px;
             display: flex;
             justify-content: space-between;
@@ -32,7 +43,8 @@
             cursor: pointer;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             font-size: 14px;
-            border-bottom: 1px solid #e1e8ed;
+            border-bottom: 1px solid #444;
+            color: #abb2bf;
         }
 
         /* 代码块内容样式 - 添加滚动条 */
@@ -65,9 +77,10 @@
             font-weight: 600;
         }
 
-        /* KaTeX公式字体大小调整 */
+        /* KaTeX公式字体调整 */
         .katex {
             font-size: 0.9em !important; /* 调整为适当大小 */
+            font-family: 'Computer Modern', 'Latin Modern', 'Times New Roman', 'Cambria Math', 'STIXGeneral', serif !important;
         }
 
         /* 行内公式调整 */
@@ -113,20 +126,6 @@
 </head>
 
 <body>
-<div id="header">
-    <h1 id="title"><a href="../../index.html">jingaz</a></h1>
-    <div class="links">
-        <a href="https://jami.net/" target="_blank" title="在Jami上联系我：wqdks">
-            <div class="iconfont icon-circle"></div>
-        </a>
-        <a href="https://github.com/jingaz" target="_blank">
-            <div class="iconfont icon-github"></div>
-        </a>
-        <a href="about.html" target="_blank">
-            <div class="iconfont icon-author"></div>
-        </a>
-    </div>
-</div>
 <div class="content">
     <article>
         <h1 class="center">用 Python 模拟人生：在择偶决策中，应该追求"完美"还是"幸福"？</h1>
@@ -311,7 +310,7 @@
                         <span class="code-toggle">▼</span>
                     </div>
                     <div class="code-content">
-                        <pre><code>
+                        <pre><code class="language-python">
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -698,10 +697,6 @@ plt.show()
                 <p>人生不是数学题，没有标准答案。但数据提醒我们：幸福往往不属于那些一直在等待"最好"的人，而属于那些在"足够好"的时候懂得珍惜的人。最优停止理论告诉我们，最完美的停止点不是追求"绝对最佳"的37%，而是追求"综合最优"的√N——这或许就是人生的智慧：在合适的时间，选择合适的人，而不是在无尽的寻找中错过幸福。
         </p>
     </article>
-    <div class="pagination">
-        <a href="SimpleTextReader/index.html" class="button button-previous">上一篇：网上冲浪看到有个挺方便的文本阅读器，改一下搬过来用</a>
-        <span class="button button-disabled button-next">下一篇：没有了</span>
-    </div>
 </div>
 </body>
 

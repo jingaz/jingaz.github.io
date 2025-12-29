@@ -4,10 +4,185 @@
 <head>
     <meta name="author" content="liujing" charset="utf-8">
     <title>游戏手柄测试</title>
-    <link rel="stylesheet" type="text/css" href="../assets/index.css">
-    <link rel="stylesheet" type="text/css" href="../assets/gamepad-tester.css">
     <script src="../assets/gamepad-tester.js"></script>
     <link rel="shortcut icon" href="../media/image.svg">
+    <style>
+/* 核心样式 - 内联必要的CSS */
+body, html {
+    padding: 0;
+    margin: 0;
+    font: 300 18px/1.5 "Microsoft Yahei", Roboto, "Helvetica Neue", Arial, sans-serif, "Verdana", "Hiragino Sans GB";
+    background: #fff;
+    color: black;
+}
+
+body {
+    border-top: 5px solid #2c3e50;
+    padding: 50px 0;
+}
+
+.content {
+    max-width: 750px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 600px;
+    margin: auto;
+}
+
+article {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 750px;
+    margin: auto;
+    word-wrap: break-word;
+    margin: 10px 0;
+}
+
+/* 文本样式 */
+h1 {
+    font-weight: bolder;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-size: medium;
+    color: #222;
+}
+
+p, h1 {
+    margin: 0 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: #42b6f3;
+    transition: all 0.2s ease;
+}
+
+a:hover, a:focus {
+    color: #222;
+}
+
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* 响应式样式 */
+@media print, screen and (max-width: 420px) {
+    body {
+        font-size: 16px;
+        padding: 20px 0;
+    }
+}
+
+/* 游戏手柄测试样式 */
+h1 {
+  margin-top: 0px;
+  margin-bottom: 5px;
+  font-size: 3.5em;
+}
+
+.center {
+  text-align: center;
+}
+
+.controller-status {
+  font-weight: bold;
+  text-align: center;
+}
+
+#controller-connected {
+  color: green;
+}
+
+#controller-connected-area {
+  display: none;
+}
+
+#controller-not-connected-area {
+  color: darkred;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+#rumble-on-button-press-area {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.loader {
+  display: inline-block;
+  border: 8px solid #484848;
+  border-radius: 50%;
+  border-top: 8px solid #3498db;
+  border-bottom: 8px solid #3498db;
+  width: 20px;
+  height: 20px;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* button grid */
+#buttons {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(min-content, max-content));
+  grid-gap: 15px;
+  justify-content: center;
+  justify-items: start;
+}
+
+.gamepad-button {
+    background-color: rgb(223 222 222 / 27%);
+    height: 35px;
+    font-weight: 500;
+    min-width: 35px;
+    display: flex;
+}
+
+.button-text-area {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.button-name {
+  color: rgb(5, 51, 97);
+  font-size: 50%;
+  opacity: 0.6;
+}
+
+.button-value {
+  color: rgb(0, 0, 0);
+  font-size: 10px;
+}
+
+/* controller */
+
+.selected-button {
+  fill: black;
+}
+
+/* axes */
+
+.axis-name {
+  color: grey;
+  font-weight: bolder;
+  font-size: 10px;
+}
+
+.axis-value {
+  color: rgb(126, 54, 54);
+  font-size: 10px;
+}
+    </style>
 </head>
 
 <body>

@@ -4,23 +4,103 @@
 <head>
     <meta name="author" content="liujing" charset="utf-8">
     <title>我的家乡是信阳</title>
-    <link rel="stylesheet" type="text/css" href="../assets/index.css">
     <script src="../assets/phaser.min.js"></script>
     <script src="../assets/catch-the-cat.js"></script>
     <link rel="shortcut icon" href="../media/image.svg">
+    <style>
+/* 核心样式 - 内联必要的CSS */
+body, html {
+    padding: 0;
+    margin: 0;
+    font: 300 18px/1.5 "Microsoft Yahei", Roboto, "Helvetica Neue", Arial, sans-serif, "Verdana", "Hiragino Sans GB";
+    background: #fff;
+    color: black;
+}
+
+body {
+    border-top: 5px solid #2c3e50;
+    padding: 50px 0;
+}
+
+.content {
+    max-width: 750px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 600px;
+    margin: auto;
+}
+
+article {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 750px;
+    margin: auto;
+    word-wrap: break-word;
+    margin: 10px 0;
+}
+
+/* 文本样式 */
+h1 {
+    font-weight: bolder;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-size: medium;
+    color: #222;
+}
+
+p, h1 {
+    margin: 0 0 20px;
+}
+
+strong {
+    font-weight: 500;
+    color: #222;
+}
+
+a {
+    text-decoration: none;
+    color: #42b6f3;
+    transition: all 0.2s ease;
+}
+
+a:hover, a:focus {
+    color: #222;
+}
+
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+p.date {
+    text-transform: uppercase;
+    font-size: 13px;
+    line-height: 1;
+}
+
+/* 响应式样式 */
+@media print, screen and (max-width: 420px) {
+    body {
+        font-size: 16px;
+        padding: 20px 0;
+    }
+}
+    </style>
 </head>
 
 <body>
     <div class="content">
         <article>
             <h1>我的家乡</h1>
-            <p>&emsp;&emsp;我的家乡信阳，与湖北孝感接壤，在河南的最南边，丘陵绵延起伏，与北边的平原地区，各方面都差异巨大。与淮河北边的华北平原种小麦的传统不同，水稻是我们的主要农作物，它需要精细的照顾和充分的灌溉，缺水即绝收，真实而残酷。</p>
-            <p>&emsp;&emsp;信阳有一种浪费食物的传统，一桌子堆叠起来的饭菜从开席到收盘子，食物看起来必须几乎没有减少，不然就是主人家极大的丢脸，尽管未来两三天这家人都要吃剩饭剩菜。我年轻的时候认为这种浪费不可理喻，后来读了些历史，才确信找到了缘由。</p>
-            <p>&emsp;&emsp;59年到61年三年自然灾害期间，由于“反瞒产”风气盛行，上级领导检查粮仓，粮食越多政绩越好，于是市委书记省委书记等人大肆收缴农民的救命口粮存于仓库，信阳地区饿死了超过百万人，史称“信阳事件”，直到习仲勋向党中央报告了这一事件，人祸才得以抑制。但是饿死人造成的影响已经嵌入到了当地的传承中。我们村“刘畈”也因为损失了太多人口而荒废，幸存下来的人经常会念叨“粮食关”，这里有个习惯，请客吃饭也必须浪费，对食物匮乏的恐惧已经刻进了老一辈信阳人的灵魂深处，只是这些新一代不能理解。</p>
-            <p>&emsp;&emsp;犯下种族灭绝罪行的那几个人只坐了几年牢，就放了出来，文革后还得到了某领导同志的高调平反，吹哨人张钦礼却被判入狱十三年，罪名是迫害老干部、捏造焦裕禄事迹等。也许政治斗争没有公平正义。但是，公道自在人心。</p>
-            <p>&emsp;&emsp;<strong style="color:red">警钟长鸣。</strong></p>
-            <p><img src="../media/20220209.jpg" alt="卷窝菜" border="0" />
-            信阳特产，本地冬天火锅必备——小黑白菜，学名卷窝菜、黄心菜</p>
+            <p>&emsp;&emsp;我的家乡信阳，与湖北孝感接壤，在河南的最南边，地势绵延起伏，与华北平原截然不同，除了地形差异，语言习惯，农作物也有差异。信阳地区主要农作物是水稻，种水稻需要精细的照顾和充分的灌溉，缺水即绝收。</p>
+            <p>&emsp;&emsp;信阳有两个特产，信阳毛尖和卷窝菜，前者在网络上挺有名气的，后者是我的最爱</p>
+            <p><img src="../media/20220209.jpg" alt="卷窝菜" border="1" />信阳特产，本地冬天火锅必备——卷窝菜、黄心菜，本地人称小黑白菜</p>
+            <hr>
+            <p>&emsp;&emsp;信阳至今都有一种聚餐时浪费食物的习惯，特别是在我老家那农村，从开席到结束收盘子时，一桌子菜看起来不能空空荡荡，不然就是主人家招待不周，会被人指指点点。我年轻时不能理解这种浪费，后来读了些历史，才确信找到了缘由。</p>
+            <p>&emsp;&emsp;59年到61年三年自然灾害期间，由于“反瞒产”风气盛行，上级领导检查粮仓，粮食越多政绩越好，于是市委书记省委书记等人大肆收缴农民的救命口粮存于仓库，信阳地区饿死了超过百万人，史称“信阳事件”，直到习仲勋向党中央报告了这一事件，人祸才得以抑制。但是饿死人造成的影响已经嵌入到了当地的传承中。我们村以前叫“刘畈”，因为大面积绝户，现在也能看到一片片废弃的土胚房。幸存下来的人经常会念叨“粮食关”教育小孩吃饭别浪费，对食物匮乏的恐惧已经刻进了老一辈信阳人的灵魂深处，形成了本地独有的语言传承。</p>
+            <p>&emsp;&emsp;犯下严重罪行的那几个人只坐了几年牢，就放了出来，文革后还得到了某政变夺权上台的领导人的高调平反，吹哨人张钦礼却被判入狱十三年，罪名是迫害老干部、捏造焦裕禄事迹等，简直荒唐。</p>
+            <p>&emsp;&emsp;信阳事件虽然没有被官方用春秋笔法掩盖，但是数十年来在中文互联网上也是一点热度都没有，很多本地年轻人都不知道这个地区在半个世纪前都发生了什么。</p>
+            <p>&emsp;&emsp;<strong style="color:red">天若有情天亦老，人间正道是沧桑。</strong></p>
             <p class="date">
                 2022/02/09
             </p>

@@ -4,28 +4,100 @@
 <head>
     <meta name="author" content="liujing" charset="utf-8">
     <title>demining-script</title>
-    <link rel="stylesheet" type="text/css" href="../assets/index.css">
-    <link rel="stylesheet" type="text/css" href="../assets/solarized-dark.min.css">
     <link rel="shortcut icon" href="../media/image.svg">
     <style>
-        .imgPreview {
-            display: none;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            background: rgba(0, 0, 0, 0.5);
-        }
+/* 核心样式 - 内联必要的CSS */
+body, html {
+    padding: 0;
+    margin: 0;
+    font: 300 18px/1.5 "Microsoft Yahei", Roboto, "Helvetica Neue", Arial, sans-serif, "Verdana", "Hiragino Sans GB";
+    background: #fff;
+    color: black;
+}
 
-        .imgPreview img {
-            z-index: 100;
-            width: 90%;
-            height: auto;
-            position: fixed;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            left: 50%;
-        }
+body {
+    border-top: 5px solid #2c3e50;
+    padding: 50px 0;
+}
+
+.content {
+    max-width: 750px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 600px;
+    margin: auto;
+}
+
+article {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 750px;
+    margin: auto;
+    word-wrap: break-word;
+    margin: 10px 0;
+}
+
+/* 文本样式 */
+h1 {
+    font-weight: bolder;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-size: medium;
+    color: #222;
+}
+
+p, h1 {
+    margin: 0 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: #42b6f3;
+    transition: all 0.2s ease;
+}
+
+a:hover, a:focus {
+    color: #222;
+}
+
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+p.date {
+    text-transform: uppercase;
+    font-size: 13px;
+    line-height: 1;
+}
+
+/* 响应式样式 */
+@media print, screen and (max-width: 420px) {
+    body {
+        font-size: 16px;
+        padding: 20px 0;
+    }
+}
+
+/* 原有自定义样式 */
+.imgPreview {
+    display: none;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.imgPreview img {
+    z-index: 100;
+    width: 90%;
+    height: auto;
+    position: fixed;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    left: 50%;
+}
     </style>
 </head>
 

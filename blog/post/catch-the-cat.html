@@ -4,10 +4,77 @@
 <head>
     <meta name="author" content="liujing" charset="utf-8">
     <title>抓小猫</title>
-    <link rel="stylesheet" type="text/css" href="../assets/index.css">
     <script src="../assets/phaser.min.js"></script>
     <script src="../assets/catch-the-cat.js"></script>
     <link rel="shortcut icon" href="../media/image.svg">
+    <style>
+/* 核心样式 - 内联必要的CSS */
+body, html {
+    padding: 0;
+    margin: 0;
+    font: 300 18px/1.5 "Microsoft Yahei", Roboto, "Helvetica Neue", Arial, sans-serif, "Verdana", "Hiragino Sans GB";
+    background: #fff;
+    color: black;
+}
+
+body {
+    border-top: 5px solid #2c3e50;
+    padding: 50px 0;
+}
+
+.content {
+    max-width: 750px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 600px;
+    margin: auto;
+}
+
+article {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    width: 750px;
+    margin: auto;
+    word-wrap: break-word;
+    margin: 10px 0;
+}
+
+/* 文本样式 */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bolder;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-size: medium;
+    color: #222;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 20px;
+}
+
+strong {
+    font-weight: 500;
+    color: #222;
+}
+
+a {
+    text-decoration: none;
+    color: #42b6f3;
+    transition: all 0.2s ease;
+}
+
+a:hover, a:focus {
+    color: #222;
+}
+
+/* 响应式样式 */
+@media print, screen and (max-width: 420px) {
+    body {
+        font-size: 16px;
+        padding: 20px 0;
+    }
+}
+    </style>
 </head>
 
 <body>

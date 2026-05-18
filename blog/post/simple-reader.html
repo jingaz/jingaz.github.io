@@ -251,7 +251,6 @@
             z-index: 1002;
             overflow-y: auto;
             box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
-            /* 拖拽时禁止文本选择 */
             user-select: none;
         }
 
@@ -468,8 +467,6 @@
             .resize-handle {
                 width: 8px;
             }
-
-            /* 移动端增大可触摸区域 */
         }
     </style>
 </head>
@@ -519,6 +516,20 @@
     </div>
     <div class="scroll-hint" id="scroll-hint"></div>
 
+    <!-- ========== 设置面板（补全内容） ========== -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="setting-item">
+            <label>字体大小: <input type="range" id="font-size" min="0.8" max="2.0" step="0.02"></label>
+        </div>
+        <div class="setting-item">
+            <label>行高: <input type="range" id="line-height" min="1.2" max="2.5" step="0.05"></label>
+        </div>
+        <div class="setting-item">
+            <button id="reset-settings" class="btn">重置</button>
+            <button id="save-settings" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+
     <script>
         (function () {
             // ---------- 存储KEY ----------
@@ -527,7 +538,7 @@
                 SETTINGS: 'reader_settings',
                 CURRENT_BOOK: 'reader_current_book',
                 CURRENT_CHAPTER: 'reader_current_chapter',
-                SIDEBAR_WIDTH: 'reader_sidebar_width'   // 新增存储侧边栏宽度
+                SIDEBAR_WIDTH: 'reader_sidebar_width'
             };
             const DEFAULT_SETTINGS = {
                 fontSize: 1.2,
@@ -567,6 +578,7 @@
             const fileInput = $('file-input');
             const selectFileBtn = $('select-file-btn');
             const scrollHint = $('scroll-hint');
+            // 设置面板内部控件
             const fontSizeRange = $('font-size');
             const lineHeightRange = $('line-height');
             const resetSettingsBtn = $('reset-settings');
@@ -580,7 +592,7 @@
             let isDarkMode = false;
 
             // --- 侧边栏宽度拖拽逻辑 ---
-            let sidebarWidth = 280;          // 默认值
+            let sidebarWidth = 280;
             let isResizing = false;
             let startX = 0;
             let startWidth = 0;
@@ -607,7 +619,6 @@
                     isResizing = true;
                     startX = e.clientX;
                     startWidth = sidebarWidth;
-                    // 添加全局样式防止选中
                     document.body.style.cursor = 'ew-resize';
                     document.body.style.userSelect = 'none';
                 });
@@ -616,7 +627,7 @@
                     e.preventDefault();
                     let delta = e.clientX - startX;
                     let newWidth = startWidth + delta;
-                    newWidth = Math.min(550, Math.max(200, newWidth)); // 限制宽度200~550px
+                    newWidth = Math.min(550, Math.max(200, newWidth));
                     if (newWidth !== sidebarWidth) {
                         sidebarWidth = newWidth;
                         document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
@@ -630,7 +641,7 @@
                         document.body.style.userSelect = '';
                     }
                 });
-                // 可选移动端触摸支持（简易）
+                // 触摸屏支持
                 resizeHandle.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     isResizing = true;
@@ -657,6 +668,7 @@
 
             // 辅助函数
             function showMsg(msg) {
+                if (!scrollHint) return;
                 scrollHint.textContent = msg;
                 scrollHint.classList.add('show');
                 setTimeout(() => scrollHint.classList.remove('show'), 2000);
@@ -690,11 +702,12 @@
 
             // 书架渲染
             function renderBookshelf() {
+                if (!bookshelfDiv) return;
                 bookshelfDiv.innerHTML = '';
                 const addCard = document.createElement('div');
                 addCard.className = 'book-card add-book-btn';
                 addCard.innerHTML = '<span class="plus-icon">+</span><p>添加书籍</p>';
-                addCard.addEventListener('click', () => uploadArea.classList.add('active'));
+                addCard.addEventListener('click', () => { if (uploadArea) uploadArea.classList.add('active'); });
                 bookshelfDiv.appendChild(addCard);
                 currentBooks.forEach(book => {
                     const card = document.createElement('div');
@@ -742,14 +755,14 @@
             function prevChapter() { if (currentBook && currentChapterIndex > 0) jumpToChapter(currentChapterIndex - 1); }
             function nextChapter() { if (currentBook && currentBook.content && currentChapterIndex < currentBook.content.length - 1) jumpToChapter(currentChapterIndex + 1); }
             function updateNavButtonsState() {
-                if (!currentBook) return;
+                if (!currentBook || !prevBtn || !nextBtn) return;
                 prevBtn.classList.toggle('disabled', currentChapterIndex === 0);
                 nextBtn.classList.toggle('disabled', currentChapterIndex === currentBook.content.length - 1);
             }
 
             // 渲染所有章节（带ID）
             function renderAllChapters() {
-                if (!currentBook) return;
+                if (!currentBook || !chapterContent) return;
                 chapterContent.innerHTML = '';
                 currentBook.content.forEach((chap, idx) => {
                     const section = document.createElement('section');
@@ -768,7 +781,7 @@
 
             // 侧边栏
             function buildSidebarChapters() {
-                if (!currentBook) return;
+                if (!currentBook || !chaptersList) return;
                 chaptersList.innerHTML = '';
                 currentBook.content.forEach((chap, idx) => {
                     const li = document.createElement('li');
@@ -776,13 +789,14 @@
                     li.innerHTML = `<span class="chapter-item-number">${idx + 1}</span><span class="chapter-item-title">${escapeHtml(chap.title)}</span>`;
                     li.addEventListener('click', () => {
                         jumpToChapter(idx);
-                        chaptersSidebar.classList.remove('active');
-                        overlay.classList.remove('active');
+                        if (chaptersSidebar) chaptersSidebar.classList.remove('active');
+                        if (overlay) overlay.classList.remove('active');
                     });
                     chaptersList.appendChild(li);
                 });
             }
             function updateActiveChapterInSidebar() {
+                if (!chaptersList) return;
                 const items = chaptersList.querySelectorAll('.chapter-item');
                 items.forEach((item, i) => item.classList.toggle('active', i === currentChapterIndex));
             }
@@ -813,9 +827,9 @@
                     targetIndex = Math.min(Math.floor((progress / 100) * book.content.length), book.content.length - 1);
                 }
                 currentChapterIndex = targetIndex;
-                bookshelfView.classList.add('hidden');
-                readerView.classList.add('active');
-                chapterNav.classList.remove('hidden');
+                if (bookshelfView) bookshelfView.classList.add('hidden');
+                if (readerView) readerView.classList.add('active');
+                if (chapterNav) chapterNav.classList.remove('hidden');
                 renderAllChapters();
                 buildSidebarChapters();
                 setTimeout(() => { jumpToChapter(currentChapterIndex); }, 20);
@@ -823,11 +837,11 @@
             }
 
             function showBookshelf() {
-                bookshelfView.classList.remove('hidden');
-                readerView.classList.remove('active');
-                chapterNav.classList.add('hidden');
-                chaptersSidebar.classList.remove('active');
-                overlay.classList.remove('active');
+                if (bookshelfView) bookshelfView.classList.remove('hidden');
+                if (readerView) readerView.classList.remove('active');
+                if (chapterNav) chapterNav.classList.add('hidden');
+                if (chaptersSidebar) chaptersSidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
                 currentBook = null;
                 localStorage.removeItem(STORAGE.CURRENT_BOOK);
                 localStorage.removeItem(STORAGE.CURRENT_CHAPTER);
@@ -865,7 +879,7 @@
                     currentBooks.push(book);
                     saveBooks();
                     renderBookshelf();
-                    uploadArea.classList.remove('active');
+                    if (uploadArea) uploadArea.classList.remove('active');
                     showMsg(`添加《${book.title}》成功，共${book.content.length}章`);
                 };
                 reader.onerror = () => showMsg('读取失败');
@@ -873,11 +887,18 @@
             }
 
             function openSettings() {
+                if (!settingsPanel || !overlay) return;
                 settingsPanel.classList.toggle('active');
                 overlay.classList.toggle('active', settingsPanel.classList.contains('active'));
             }
-            function closePanels() { settingsPanel.classList.remove('active'); chaptersSidebar.classList.remove('active'); overlay.classList.remove('active'); uploadArea.classList.remove('active'); }
+            function closePanels() {
+                if (settingsPanel) settingsPanel.classList.remove('active');
+                if (chaptersSidebar) chaptersSidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                if (uploadArea) uploadArea.classList.remove('active');
+            }
             function applyUISettings() {
+                if (!fontSizeRange || !lineHeightRange) return;
                 settings.fontSize = parseFloat(fontSizeRange.value);
                 settings.lineHeight = parseFloat(lineHeightRange.value);
                 document.documentElement.style.setProperty('--font-size', `${settings.fontSize}em`);
@@ -888,8 +909,8 @@
             function resetSettingsUI() {
                 settings = { ...DEFAULT_SETTINGS };
                 isDarkMode = settings.darkMode;
-                fontSizeRange.value = settings.fontSize;
-                lineHeightRange.value = settings.lineHeight;
+                if (fontSizeRange) fontSizeRange.value = settings.fontSize;
+                if (lineHeightRange) lineHeightRange.value = settings.lineHeight;
                 applyTheme();
                 document.documentElement.style.setProperty('--font-size', `${settings.fontSize}em`);
                 document.documentElement.style.setProperty('--line-height', settings.lineHeight);
@@ -920,23 +941,40 @@
             }
 
             function bindEvents() {
-                backBtn.addEventListener('click', showBookshelf);
-                chaptersBtn.addEventListener('click', () => { if (currentBook) { chaptersSidebar.classList.add('active'); overlay.classList.add('active'); buildSidebarChapters(); } });
-                overlay.addEventListener('click', closePanels);
-                themeToggle.addEventListener('click', toggleDarkMode);
-                settingsBtn.addEventListener('click', openSettings);
-                prevBtn.addEventListener('click', prevChapter);
-                nextBtn.addEventListener('click', nextChapter);
-                selectFileBtn.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', e => { if (e.target.files[0]) handleUpload(e.target.files[0]); fileInput.value = ''; });
-                uploadArea.addEventListener('click', e => { if (e.target === uploadArea) uploadArea.classList.remove('active'); });
-                const dropZone = uploadArea;
-                dropZone.addEventListener('dragover', e => e.preventDefault());
-                dropZone.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleUpload(f); uploadArea.classList.remove('active'); });
-                resetSettingsBtn.addEventListener('click', resetSettingsUI);
-                saveSettingsBtn.addEventListener('click', applyUISettings);
-                fontSizeRange.addEventListener('input', (e) => { document.documentElement.style.setProperty('--font-size', `${e.target.value}em`); });
-                lineHeightRange.addEventListener('input', (e) => { document.documentElement.style.setProperty('--line-height', `${e.target.value}`); });
+                if (backBtn) backBtn.addEventListener('click', showBookshelf);
+                if (chaptersBtn && currentBook) chaptersBtn.addEventListener('click', () => {
+                    if (currentBook && chaptersSidebar && overlay) {
+                        chaptersSidebar.classList.add('active');
+                        overlay.classList.add('active');
+                        buildSidebarChapters();
+                    }
+                });
+                // 修复：chaptersBtn 点击时也要判断 currentBook，但事件绑定一次后动态判断，所以要在回调中判断
+                if (chaptersBtn) {
+                    chaptersBtn.addEventListener('click', () => {
+                        if (currentBook && chaptersSidebar && overlay) {
+                            chaptersSidebar.classList.add('active');
+                            overlay.classList.add('active');
+                            buildSidebarChapters();
+                        }
+                    });
+                }
+                if (overlay) overlay.addEventListener('click', closePanels);
+                if (themeToggle) themeToggle.addEventListener('click', toggleDarkMode);
+                if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+                if (prevBtn) prevBtn.addEventListener('click', prevChapter);
+                if (nextBtn) nextBtn.addEventListener('click', nextChapter);
+                if (selectFileBtn) selectFileBtn.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+                if (fileInput) fileInput.addEventListener('change', e => { if (e.target.files[0]) handleUpload(e.target.files[0]); fileInput.value = ''; });
+                if (uploadArea) uploadArea.addEventListener('click', e => { if (e.target === uploadArea && uploadArea) uploadArea.classList.remove('active'); });
+                if (uploadArea) {
+                    uploadArea.addEventListener('dragover', e => e.preventDefault());
+                    uploadArea.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleUpload(f); if (uploadArea) uploadArea.classList.remove('active'); });
+                }
+                if (resetSettingsBtn) resetSettingsBtn.addEventListener('click', resetSettingsUI);
+                if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', applyUISettings);
+                if (fontSizeRange) fontSizeRange.addEventListener('input', (e) => { document.documentElement.style.setProperty('--font-size', `${e.target.value}em`); });
+                if (lineHeightRange) lineHeightRange.addEventListener('input', (e) => { document.documentElement.style.setProperty('--line-height', `${e.target.value}`); });
                 document.addEventListener('keydown', (e) => {
                     if (!currentBook) return;
                     if (e.key === 'ArrowLeft') { prevChapter(); e.preventDefault(); }

@@ -815,7 +815,31 @@
             }
 
             function openBook(book) {
-                if (!book.content || book.content.length === 0) return showMsg('书籍无有效章节');
+                // 用户上传的书籍（无content）需要重新选择文件
+                if (!book.content || book.content.length === 0) {
+                    if (book.fileName) {
+                        showMsg(`请重新选择《${book.title}》的txt文件`);
+                        // 触发文件选择，选择后加载书籍
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.txt';
+                        input.onchange = e => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = ev => {
+                                const fullBook = parseTxtToBook(file.name, ev.target.result);
+                                if (!fullBook.content.length) return showMsg('解析失败，无章节');
+                                // 用书籍内容打开（不保存content到localStorage）
+                                openBook(fullBook);
+                            };
+                            reader.readAsText(file, 'UTF-8');
+                        };
+                        input.click();
+                        return;
+                    }
+                    return showMsg('书籍无有效章节');
+                }
                 currentBook = book;
                 const savedChapter = localStorage.getItem(STORAGE.CURRENT_CHAPTER);
                 let targetIndex = 0;
@@ -876,8 +900,10 @@
                 reader.onload = e => {
                     const book = parseTxtToBook(file.name, e.target.result);
                     if (!book.content.length) return showMsg('解析失败，无章节');
-                    currentBooks.push(book);
-                    saveBooks();
+                    // 内存中保存完整书籍，但localStorage只存元数据（避免超出配额）
+                    const bookMeta = { id: book.id, title: book.title, author: book.author, progress: 0, fileName: file.name };
+                    currentBooks.push(book);  // 存完整对象到内存
+                    saveBooks();  // 只把元数据存入localStorage
                     renderBookshelf();
                     if (uploadArea) uploadArea.classList.remove('active');
                     showMsg(`添加《${book.title}》成功，共${book.content.length}章`);
